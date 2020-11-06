@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Service.Grpc;
 
 namespace Service
 {
@@ -26,6 +27,7 @@ namespace Service
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllers();
+            services.AddGrpc();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -40,11 +42,15 @@ namespace Service
 
             app.UseRouting();
 
+            // TODO what about this: 
+            // app.UseGrpcWeb(new GrpcWebOptions { DefaultEnabled = true });
+
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();
+                endpoints.MapGrpcService<HelloService>();
             });
         }
     }

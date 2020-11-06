@@ -1,0 +1,21 @@
+// Service/Proto/hello.proto
+
+syntax = "proto3";
+
+// Classes will be generated in this namespace
+option csharp_namespace = "Service.Grpc";
+
+// This will generate class MyService.MyServiceBase for us
+service MyService {
+  rpc SayHello (HelloRequest) returns (HelloResponse) {}
+}
+
+// Request will have a string field called name
+message HelloRequest {
+  string name = 1;
+}
+
+// HelloMessage will have a string field called message
+message HelloResponse {
+  string message = 1;
+}
