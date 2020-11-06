@@ -26,8 +26,6 @@ This will be helpful for anyone who is just getting started with gRPC in a new p
 
 To begin with, we will create a simple web service and then add grpc to it. We could straightaway create a grpc service with command `dotnet new grpc`, but we want to start from a web service so that we can better understand how to add grpc to an existing web service.
 
-
-
 **Creating a webservice**
 
 ```bash
@@ -45,12 +43,72 @@ cd Service
 dotnet run
 ```
 
-
-
 Before commiting our code, check the url https://localhost:5001/weatherforecast to make sure our service is working fine.
 
 ```
 git add --all
 git commit -m "Created a web service"
 ```
+
+
+
+**Create a file `Service/Dockerfile`**
+
+```dockerfile
+# Service/Dockerfile
+
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build
+WORKDIR /source
+
+COPY ./*.csproj .
+RUN dotnet restore
+
+COPY . .
+RUN dotnet publish -c release -o /app --no-restore
+
+FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
+WORKDIR /app
+
+COPY --from=build /app .
+
+EXPOSE 80  
+ENTRYPOINT ["dotnet", "Service.dll"]
+```
+
+Create another file `Service/.dockerignore` to tell docker to ignore files that we do not want to pack: 
+
+```bash
+# Service/.dockerignore
+
+**/.dockerignore
+**/.project
+**/.vs
+**/.idea
+**/.vscode
+**/*.*proj.user
+**/bin
+**/Dockerfile*
+**/obj
+```
+
+
+
+**Running service as docker container**: 
+
+```bash
+# Build docker image
+docker build -t server .
+
+# Run service as container
+docker run -p 5000:80 server
+```
+
+Before we commit, open and check http://localhost:5000/weatherforecast to make sure our docker configurations are working as expected.
+
+```
+git add --all
+git commit -m "Added dockerfile for service"
+```
+
+
 
