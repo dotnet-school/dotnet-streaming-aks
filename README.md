@@ -4,7 +4,33 @@ In this workshop we will create a grpc streaming server, test it with a gRPC GUI
 
 This will be helpful for anyone who is just getting started with gRPC in a new project.
 
-### Prerequisites
+
+
+
+
+- **[Pre-requisites](#pre-requisites)**
+
+  > *Shell, Dot Net Core 3.1, BloomRPC, Docker*
+
+- **[Create a gRPC service](#create-service)**
+
+  > *Create service using `dotnet new grpc`*
+
+- **[Test gRPC service](#test-service)**
+
+  > *Test a gRPC endpoint using BloomRPC*
+
+- **[Create gRPC service](#create-client)**
+
+  > *Create a console app using `dotnet new console` and get response from a gRPC endpoint*
+
+
+
+
+
+<a name="pre-requisites"></a>
+
+### Pre-requisites
 
 - **Shell** 
 
@@ -20,7 +46,10 @@ This will be helpful for anyone who is just getting started with gRPC in a new p
 
 - **Docker**
 
-  
+
+
+
+<a name="create-service"></a>
 
 ### Step1 - Creating a gRPC service
 
@@ -102,25 +131,29 @@ docker run -p 5000:80 server
 
 Checkout a protobug created at `dotnet-docker-grpc-stream/Service/Protos/greep.proto`. We will use it in next step to test our server.
 
+
+
+<a name="test-service"></a>
+
 ### Step 2 - Testing a gRPC endpoint 
 
 Just like we can use postman to test an HTTP endpoint, we will use [BloomRPC](https://appimage.github.io/BloomRPC/.) to test our gRPC endpoint.
 
 Download and open the app from [here](https://appimage.github.io/BloomRPC). 
 
-![image-20201106215735673](/Users/dawn/projects/dotnet-school/dotnet-docker-grpc-stream/docs/images/open-bloom.png)
+![image-20201106215735673](./docs/images/open-bloom.png)
 
 
 
 Now select the file from our project :  ``dotnet-docker-grpc-stream/Service/Protos/greep.proto`` 
 
-![image-20201106220446319](/Users/dawn/projects/dotnet-school/dotnet-docker-grpc-stream/docs/images/load-proto-file.png)
+![image-20201106220446319](./docs/images/load-proto-file.png)
 
 
 
 Now enter the address for our gRPC server in address bar as `localhost:5000`
 
-![image-20201106220446319](/Users/dawn/projects/dotnet-school/dotnet-docker-grpc-stream/docs/images/set-grpc-server-address.png)
+![image-20201106220446319](./docs/images/set-grpc-server-address.png)
 
 
 
@@ -132,9 +165,11 @@ docker run -p 5000:80 server
 
 Now click on the play button to test our endpoint.
 
-![image-20201106220446319](/Users/dawn/projects/dotnet-school/dotnet-docker-grpc-stream/docs/images/run-first-test.png)
+![image-20201106220446319](./docs/images/run-first-test.png)
 
 
+
+<a name="create-client"></a>
 
 ### Step - 3 Create a client app
 
