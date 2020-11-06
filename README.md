@@ -20,13 +20,17 @@ This is a purely handson workshop and does not talk about gRPC or protobuf in de
 
   > *Test a gRPC endpoint using BloomRPC*
 
-- **[Create gRPC service](#create-client)**
+- **[Create gRPC client](#create-client)**
 
   > *Create a console app using `dotnet new console` and get response from a gRPC endpoint*
 
 - **[Create gRPC streaming endpoint](#create-stream)**
 
   > *Add streaming endpoint to our grpc server*
+  
+- **[Create gRPC streaming client](#create-stream-client)**
+
+  > *Consume our streaming endpoint in the client*
 
 
 
@@ -271,9 +275,12 @@ namespace Client
 
 
 
-```
-# Run the server is not running
+```bash
+# Run the server if not running
 docker run -p 5000:80 server
+
+# Run client (in Client dir)
+dotnet run
 ```
 
 
@@ -405,4 +412,105 @@ docker run -p 5000:80 server
 Now in BloomRPC, click on **+** icon and add our `Service/Protos/prices.proto`
 
 ![image-20201106220446319](./docs/images/bloomrpc-stream-hd.gif)
+
+
+
+<a name="create-stream-client"></a>
+
+# Step 5 : Create streaming client
+
+Now that our server has an streaming endpoint, lets create a client code that can listen to the stream.
+
+Copy the `Service/Protos/prices.proto` to `Client/Protos/prices.proto`
+
+```bash
+cd Client
+cp ../Service/Protos/prices.proto ./Protos/
+```
+
+Remember we can not consume a gRPC endpoint unless we have the proto file for the interface.
+
+Add the `prices.proto` to `Client/Client.csproj`
+
+```diff
+ <ItemGroup>
+	 <Protobuf Include="Protos\greet.proto" GrpcServices="Client" />
++	 <Protobuf Include="Protos\prices.proto" GrpcServices="Client" />
+ </ItemGroup>
+```
+
+
+
+Add another method in our 
+
+```csharp
+private static async Task SubscribeToStream()
+{
+  using var channel = GrpcChannel.ForAddress("http://localhost:5000");
+
+  var client = new Pricing.PricingClient(channel);
+  var request = new PriceRequest{Uic = "211", AssetType = "Stock"};
+
+  var streamReader = client.Subscribe(request).ResponseStream;
+
+  while (await streamReader.MoveNext())
+  {
+    Console.WriteLine($"Received: {streamReader.Current}");
+  }
+
+  Console.WriteLine("Gracefully ended.");
+}
+```
+
+Now call this method in main function  : 
+
+```diff
+- static void Main()
++ static async Task Main()
+ {
+   AppContext.SetSwitch(
+     "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", 
+     true);
+
+   SayHello();
++  await SubscribeToStream();
+ }
+```
+
+And add this import on top:
+
+```diff
+using Grpc.Net.Client;
+```
+
+
+
+Now lets test our client
+
+```bash
+# Run the server if not running
+docker run -p 5000:80 server
+
+# Run client (in Client dir)
+dotnet run
+```
+
+Expected output : 
+
+```yaml
+Received: { "quote": "Quote#1 for 211-Stock" }
+Received: { "quote": "Quote#2 for 211-Stock" }
+Received: { "quote": "Quote#3 for 211-Stock" }
+Received: { "quote": "Quote#4 for 211-Stock" }
+```
+
+Our gRPC streaming client server is working. You should keep seeing new message on console till you kill the client.
+
+
+
+![image-20201106220446319](./docs/images/dance-of-joy.gif)
+
+
+
+
 
