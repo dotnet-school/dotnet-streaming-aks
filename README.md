@@ -26,8 +26,6 @@ This will be helpful for anyone who is just getting started with gRPC in a new p
 
 ### Create a gRPC service
 
-
-
 ```bash
 # Create a folder for our project
 mkdir dotnet-docker-grpc-stream
@@ -42,3 +40,13 @@ dotnet new gitignore
 cd Service
 dotnet run
 ```
+
+>  If you are using MacOS, you will get error. This is because Mac
+>
+> You will be able to run the server after next step in which we will run service inside docker container.
+>
+> If you still want to fix this, read  https://docs.microsoft.com/en-us/aspnet/core/grpc/troubleshoot?view=aspnetcore-3.1#unable-to-start-aspnet-core-grpc-app-on-macos
+
+
+
+Now open [BloomRPC](https://appimage.github.io/BloomRPC/.) 
