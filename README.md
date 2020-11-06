@@ -4,7 +4,7 @@ In this workshop we will create a grpc streaming server, test it with a gRPC GUI
 
 This will be helpful for anyone who is just getting started with gRPC in a new project.
 
-
+This is a purely handson workshop and does not talk about gRPC or protobuf in depth.
 
 
 
@@ -23,6 +23,10 @@ This will be helpful for anyone who is just getting started with gRPC in a new p
 - **[Create gRPC service](#create-client)**
 
   > *Create a console app using `dotnet new console` and get response from a gRPC endpoint*
+
+- **[Create gRPC streaming endpoint](#create-stream)**
+
+  > *Add streaming endpoint to our grpc server*
 
 
 
@@ -51,7 +55,7 @@ This will be helpful for anyone who is just getting started with gRPC in a new p
 
 <a name="create-service"></a>
 
-### Step1 - Creating a gRPC service
+# Step1 - Creating a gRPC service
 
 ```bash
 # Create a folder for our project
@@ -129,13 +133,13 @@ docker build -t server .
 docker run -p 5000:80 server
 ```
 
-Checkout a protobug created at `dotnet-docker-grpc-stream/Service/Protos/greep.proto`. We will use it in next step to test our server.
+Checkout a protobuf created at `dotnet-docker-grpc-stream/Service/Protos/greep.proto`. We will use it in next step to test our server.
 
 
 
 <a name="test-service"></a>
 
-### Step 2 - Testing a gRPC endpoint 
+# Step 2 - Testing a gRPC endpoint 
 
 Just like we can use postman to test an HTTP endpoint, we will use [BloomRPC](https://appimage.github.io/BloomRPC/.) to test our gRPC endpoint.
 
@@ -171,7 +175,9 @@ Now click on the play button to test our endpoint.
 
 <a name="create-client"></a>
 
-### Step - 3 Create a client app
+
+
+# Step - 3 Create a client app
 
 In this step we will create a .netcore console app and hit our server to read from gRPC endpoint.
 
@@ -269,4 +275,134 @@ namespace Client
 # Run the server is not running
 docker run -p 5000:80 server
 ```
+
+
+
+<a name="create-stream"></a>
+
+# Step 4 - Create a streaming endpoint
+
+Now we will create a protobuf file for an streaming interface and take a look at the protobug syntax.
+
+We will create a server that can take a financial instrument and stream its price in real time.
+
+
+
+### Define protobuf
+
+It is very much like defining a class in C#. Though there is one big difference that there is a number associated with each field in message. **This number is used to identify field in binary message data.** Unlike REST, the messages in gRPC are sent and received in binary. Which makes is much more efficient.
+
+Create our `prices.proto` file in `Server/Protos/prices.proto`: 
+
+```protobuf
+// Server/Protos/prices.proto
+
+syntax = "proto3";
+package prices;
+
+// Code will be generated in this namespace
+option csharp_namespace = "Service";
+
+// The gRPC interface definition
+service Pricing {
+  // Note that it returns "stream" of PriceResponse
+  rpc Subscribe (PriceRequest) returns (stream PriceResponse);
+}
+
+// The request message
+message PriceRequest {
+  string uic = 1;
+  string assetType = 2;
+}
+
+// The response message
+message PriceResponse {
+  string quote = 1;
+}
+```
+
+Take a note of returns statement here. **The return type is a stream of PriceResponse instead of a single instance of PriceResponse.**
+
+Here we define the interface for our service. It is very much like an interface in C#. This interface is known by both client and server. The nugets on client and server generate code based on this protobuf file.
+
+
+
+Now we will include the file in our `Service/Service.csproj`.
+
+```xml
+<!-- Service/Service.csproj --> 
+
+<ItemGroup>
+  <Protobuf Include="Protos\greet.proto" GrpcServices="Server" />
+  <Protobuf Include="Protos\prices.proto" GrpcServices="Server"/>
+</ItemGroup>
+```
+
+Notice that it already has a `greet.proto`  defined that was created by default and that we used in first part of the workshop.
+
+
+
+**Create implementation of the endpoint**
+
+Create file `Services/PricingService.cs `:
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using Grpc.Core;
+
+namespace Service
+{
+  // Pricing is the name or interface in prices.proto
+  // <service-name>.<service-name>Base class is auto generated
+  public class PricingService : Pricing.PricingBase
+  {
+
+    public override async Task Subscribe(
+      PriceRequest request, 
+      IServerStreamWriter<PriceResponse> responseStream, 
+      ServerCallContext context
+    ){
+      var i = 0;
+      while (true)
+      {
+        // At every second, keep sending a fake response
+        await Task.Delay(TimeSpan.FromSeconds(1));
+        var quote = $"Quote#{++i} for {request.Uic}-{request.AssetType}";
+        Console.WriteLine($"Sent: {quote}");
+        var response = new PriceResponse{Quote = quote};
+        await responseStream.WriteAsync(response);
+      }
+    }
+  }
+}
+```
+
+
+
+Now register our  **PricingService** in `Startup.cs`
+
+```diff
+ app.UseEndpoints(endpoints =>{
+   endpoints.MapGrpcService<GreeterService>();
++  endpoints.MapGrpcService<PricingService>();
+}
+```
+
+Notice that the GreeterService was created by default with the project.
+
+
+
+Now lets build and run our service as docker image: 
+
+```bash
+docker build -t server .
+docker run -p 5000:80 server
+```
+
+
+
+Now in BloomRPC, click on **+** icon and add our `Service/Protos/prices.proto`
+
+![image-20201106220446319](./docs/images/bloomrpc-stream-hd.gif)
 
