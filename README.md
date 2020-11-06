@@ -124,7 +124,114 @@ Now enter the address for our gRPC server in address bar as `localhost:5000`
 
 
 
+If the server is not running, start it as a container : 
+
+```
+docker run -p 5000:80 server
+```
+
 Now click on the play button to test our endpoint.
 
 ![image-20201106220446319](/Users/dawn/projects/dotnet-school/dotnet-docker-grpc-stream/docs/images/run-first-test.png)
+
+
+
+### Step - 3 Create a client app
+
+In this step we will create a .netcore console app and hit our server to read from gRPC endpoint.
+
+Create a console app in the root directory of our project
+
+```bash
+# Go to our project's root (assuming you are in Service directory)
+cd ../
+dotnet new console -o Client
+```
+
+
+
+We need following libraries to make our client work : 
+
+- [Grpc.Net.Client](https://www.nuget.org/packages/Grpc.Net.Client), which contains the .NET Core client.
+- [Google.Protobuf](https://www.nuget.org/packages/Google.Protobuf/), which contains protobuf message APIs for C#.
+- [Grpc.Tools](https://www.nuget.org/packages/Grpc.Tools/), which contains C# tooling support for protobuf files. The tooling package isn't required at runtime, so the dependency is marked with `PrivateAssets="All"`.
+
+```bash
+dotnet add package Grpc.Net.Client
+dotnet add package Google.Protobuf
+dotnet add package Grpc.Tools
+```
+
+
+
+Add the proto files from our server to client project at `Client/Protos/greet.proto`
+
+```bash
+mkdir Protos
+cp ../Service/Protos/greet.proto ./Protos/
+```
+
+
+
+Modify the `Client/Client.csproj` file to add reference to the proto file
+
+```xml
+<ItemGroup>
+  <Protobuf Include="Protos\greet.proto" GrpcServices="Client" />
+</ItemGroup>
+```
+
+
+
+Now create the Program.cs as 
+
+```csharp
+using System;
+using System.Threading.Tasks;
+using Grpc.Net.Client;
+using Service;
+
+namespace Client
+{
+  class Program
+  {
+    static void Main()
+    {
+      // Ignore this for now
+      AppContext.SetSwitch(
+        "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
+      
+      SayHello();
+    }
+
+    private static void SayHello()
+    {
+      using var channel = GrpcChannel.ForAddress("http://localhost:5000");
+      
+      // Greeter service is defined in hello.proto
+      // <service-name>.<service-name>Client is auto-created
+      var client = new Greeter.GreeterClient(channel);
+      
+      // HelloRequest is defined in hello.proto
+      var request = new HelloRequest();
+      request.Name = "Nishant";
+      
+      // SayHello method is defined in hello.proto
+      var response = client.SayHello(request);
+      
+      // HelloResponse.Message is defined in hello.proto
+      Console.WriteLine(response.Message);
+    }
+  }
+}
+```
+
+> If you did the fix for MacOS while creating the server, make sure you add a line `AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);` to start of main method in Client/Program.cs
+
+
+
+```
+# Run the server is not running
+docker run -p 5000:80 server
+```
 
