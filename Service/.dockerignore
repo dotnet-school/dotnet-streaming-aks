@@ -1,0 +1,9 @@
+**/.dockerignore
+**/.project
+**/.vs
+**/.idea
+**/.vscode
+**/*.*proj.user
+**/bin
+**/Dockerfile*
+**/obj
