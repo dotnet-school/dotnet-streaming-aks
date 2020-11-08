@@ -31,6 +31,10 @@ This is a purely handson workshop and does not talk about gRPC or protobuf in de
 - **[Create gRPC streaming client](#create-stream-client)**
 
   > *Consume our streaming endpoint in the client*
+  
+- **[Create streaming web app](#create-stream-webapp)**
+
+  > *Create a streaming web app with SIgnalR*
 
 
 
@@ -505,6 +509,69 @@ Received: { "quote": "Quote#4 for 211-Stock" }
 ```
 
 Our gRPC streaming client server is working. You should keep seeing new message on console till you kill the client.
+
+
+
+<a name="create-stream-webapp"></a>
+
+# Step 6 - Create a streaming web server
+
+In this part we will create a webserver that will have a html page and will stream data to client.
+
+For now we will just stream some randon data before we make it consume our gRPC service.
+
+
+
+Create streaming web service
+
+```bash
+# Creat a webapp for streaming to client
+dotnet new webapp -o StreamWebService
+
+cd StreamWebService
+
+# Create dockerignore for the project
+dotnet new gitignore
+
+# Run the app (make sure gRPC server is not running at 5000)
+dotnet run
+```
+
+
+
+Now open open http://localhost:5000/ and check app
+
+![image-20201108150718402](docs/images/new-web-app.png)
+
+
+
+Now lets add SignalR support to our webapp on server side first
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
