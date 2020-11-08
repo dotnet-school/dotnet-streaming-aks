@@ -1,6 +1,8 @@
-# gRPC Streaming with Dotnet and Docker
+# Streaming on cloud with C#
 
-In this workshop we will create a grpc streaming server, test it with a gRPC GUI client and then write a console app that can connect to a gRPC streaming service.
+In this workshop we will create a grpc streaming server, consume it using a web service. Then we will create a simple client that can subcribe to the update from gRPC server.
+
+![image-20201108215055329](docs/images/overall-design.png)
 
 This will be helpful for anyone who is just getting started with gRPC in a new project.
 
@@ -1098,10 +1100,6 @@ Opent the external ip of your endpoint in browser. For e.g. for above output it 
 # delete cluster
 az group delete --name $RESOURCE_GROUP --yes --no-wait
 ```
-
-
-
-This is it. Feel free to contact me if you need help or just to chat.
 
 
 
