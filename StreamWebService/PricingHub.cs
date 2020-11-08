@@ -18,15 +18,14 @@ namespace StreamWebService
             [EnumeratorCancellation]
             CancellationToken cancellationToken)
     {
-      var url = "http://localhost:5000";
+      var url = Environment.GetEnvironmentVariable("PRICING_STREAM_ENDPOINT");
       using var channel = GrpcChannel.ForAddress(url);
-      
-      yield return $"Info: Opened channel to : {url}";
 
       var client = new Pricing.PricingClient(channel);
       var request = new PriceRequest{Uic = uic, AssetType = assetType};
       
       var streamReader = client.Subscribe(request).ResponseStream;
+      yield return $"Info: Opened channel to : {url}";
 
       yield return "Info: Waiting for data from gRPC server";
 

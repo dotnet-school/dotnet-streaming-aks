@@ -39,6 +39,12 @@ This is a purely handson workshop and does not talk about gRPC or protobuf in de
 - **[Consume gRPC service in our web app](#add-grpc-client-to-webapp)**
 
   > *Consume data from gRPC server in the webapp and stream to end client*
+  
+- **[Containerize web app](#containerize-web-app)**
+
+  > *Run our web streaming service as a docker container*
+
+- 
 
 
 
@@ -777,7 +783,7 @@ namespace StreamWebService
       var url = "http://localhost:5000";
       using var channel = GrpcChannel.ForAddress(url);
       
-      yield return $"Info: Opened channel to : {url}";
+      yield return $"Info: Openening channel to : {url}";
 
       var client = new Pricing.PricingClient(channel);
       var request = new PriceRequest{Uic = uic, AssetType = assetType};
@@ -811,6 +817,81 @@ dotnet run --urls=http://localhost:3000/
 ```
 
 Open http://localhost:3000/ to check our page.
+
+![image-20201106220446319](./docs/images/webapp-streaming.gif)
+
+<a name="containerize-web-app"></a>
+
+# Step 7 - Run web app as container
+
+Before we containerize our web app, we need to make sure we can pass the url to gRPC endpoint as a runtime variable.
+
+Edit the `StreamWebService/PricingHub.cs`
+
+```diff
+- var url = "http://localhost:5000";
++ var url = Environment.GetEnvironmentVariable("PRICING_STREAM_ENDPOINT");
+  using var channel = GrpcChannel.ForAddress(url);
+```
+
+
+
+Create a file `StreamWebService/Dockerfile`
+
+```dockerfile
+#StreamWebService/Dockerfile
+
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build
+WORKDIR /source
+
+COPY ./*.csproj .
+RUN dotnet restore
+
+COPY . .
+RUN dotnet publish -c release -o /app --no-restore
+
+FROM mcr.microsoft.com/dotnet/core/aspnet:3.1
+WORKDIR /app
+
+COPY --from=build /app .
+
+EXPOSE 80  
+ENTRYPOINT ["dotnet", "StreamWebService.dll"]
+```
+
+
+
+Create `StreamWebService/.dockerignore`
+
+```
+**/.dockerignore
+**/.project
+**/.vs
+**/.idea
+**/.vscode
+**/*.*proj.user
+**/bin
+**/Dockerfile*
+**/obj
+```
+
+Run gRPC server and web app as docker containers
+
+```bash
+# Build docker container for web service (in StreamWebService dir)
+docker build -t stream-web-app .
+
+# Run the server on 5000 (if not already running)
+docker run -p 5000:80 server
+
+# Run on port 300 
+docker run -p 3000:80 -e PRICING_STREAM_ENDPOINT="http://host.docker.internal:5000" stream-web-app
+
+```
+
+Open http://localhost:3000/ to check our page.
+
+
 
 
 
