@@ -1,14 +1,34 @@
 # Streaming on cloud with C#
 
-In this workshop we will create a grpc streaming server, consume it using a web service. Then we will create a simple client that can subcribe to the update from gRPC server.
+In this workshop we will create a grpc streaming server, consume it using a web service. We will use 
+
+- Dot net Core 3.1
+- Docker
+- gRPC
+- SignalR
+- Minikube
+- Azure CLI
+- Azure Kubernetes Service
 
 ![image-20201108215055329](docs/images/overall-design.png)
 
-This will be helpful for anyone who is just getting started with gRPC in a new project.
-
-This is a purely handson workshop and does not talk about gRPC or protobuf in depth.
 
 
+This will be helpful for anyone who is just getting started with gRPC in a new project. It assumes basic knowledge of Docker, Kubernetes, C#, Dotnet core. 
+
+If you are complete beginner to above, please consider doing below exercises first : 
+
+- Docker exercise : https://github.com/dotnet-school/dotnet-docker
+- Kubernetes exercise : https://github.com/dotnet-school/dotnet-k8
+- AKS exervices : https://github.com/dotnet-school/dotnet-aks
+
+
+
+**This is a purely handson workshop and does not talk about gRPC or protobuf in depth.**
+
+
+
+### Contents
 
 - **[Pre-requisites](#pre-requisites)**
 
@@ -48,11 +68,11 @@ This is a purely handson workshop and does not talk about gRPC or protobuf in de
 
 - **[Create kubernetes configuration](#create-k8s-config)**
 
-  > Create kuberntes configuration for our app and services
+  > *Create kuberntes configuration for our app and services*
 
 - **[Deploy app on Azure Kubernetes Service](#deploy-on-aks)**
 
-  > Create a cluster on Azure Kubernetes Service using Azure CLI and deploy app on cloud.
+  > *Create a cluster on Azure Kubernetes Service using Azure CLI and deploy app on cloud.*
 
   
 
@@ -73,6 +93,12 @@ This is a purely handson workshop and does not talk about gRPC or protobuf in de
   Download from here : https://appimage.github.io/BloomRPC/. We use it to tests our gRPC server, before we start writting a client ourselves.
 
 - **Docker**
+
+- **Minikube** 
+
+- **Azure  Account**
+
+- **Azure CLI**
 
 
 
@@ -291,12 +317,10 @@ namespace Client
 }
 ```
 
-> If you did the fix for MacOS while creating the server, make sure you add a line `AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);` to start of main method in Client/Program.cs
-
 
 
 ```bash
-# Run the server if not running
+# Run the server if not already running
 docker run -p 5000:80 server
 
 # Run client (in Client dir)
@@ -309,7 +333,7 @@ dotnet run
 
 # Step 4 - Create a streaming endpoint
 
-Now we will create a protobuf file for an streaming interface and take a look at the protobug syntax.
+Now we will create a protobuf file for an streaming interface and take a look at the protobuf syntax.
 
 We will create a server that can take a financial instrument and stream its price in real time.
 
