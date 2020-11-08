@@ -989,7 +989,48 @@ Our service will fail to connect to gRPC server, even if gRPC service is running
 
 
 
-Create 
+Create a `Service/k8s/pricing-service.yml`
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: pricing-grpc-service   # Name of service (we use this as domain in todo-app config)
+spec:
+  selector:
+    app: pricing-grpc       # Exposes stream-web-app as service
+  ports:
+    - port: 5000
+      targetPort: 80 # Map service port to container port
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pricing-deployment     # Name of deployment, we wil refer this in service
+spec:
+  replicas: 2  
+  selector:
+    matchLabels:
+      app: pricing-grpc
+  template:
+    metadata:
+      labels:
+        app: pricing-grpc
+    spec:
+      containers:
+        - name: pricing-grpc
+          image: nishants/grpc-pricing-server:v0.1   # Image name for stream-web-app container
+          ports:
+            - containerPort: 80
+```
+
+
+
+Deploy our gRPC server in kubernetes cluster
+
+```bash
+kubectl apply -f Service/k8s/pricing-service.yml
+```
 
 
 
