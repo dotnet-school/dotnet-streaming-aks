@@ -923,7 +923,7 @@ Open docker hub and make sure your image is publicly accessible:
 
 
 
-Create a `k8s/web.yml`
+Create a `StreamWebService/k8s/web.yml`
 
 ```yaml
 # This part creates a load balancer pod that receives traffic from
@@ -966,6 +966,50 @@ spec:
               value: http://pricing-grpc-service:5000
           imagePullPolicy: Always
 ```
+
+Now we will create a kuberntes cluster locally to test our manifest file. You can use minikube or kind for this.
+
+```bash
+# Start a single node cluster locally
+minikube start
+
+# Check our local cluster
+kubectl cluster-info
+
+# Deploy our service to local cluster
+kubectl apply -f StreamWebService/k8s/web.yml
+# service/stream-web-app-service created
+# deployment.apps/stream-web-app created
+
+# Check our service in browser
+minkube service stream-web-app-service
+```
+
+Our service will fail to connect to gRPC server, even if gRPC service is running as docker container. We will need to deploy our gRPC server in the kuberntes cluter.
+
+
+
+Create 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
