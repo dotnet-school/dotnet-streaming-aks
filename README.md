@@ -1092,7 +1092,7 @@ Opent the external ip of your endpoint in browser. For e.g. for above output it 
 
 ![image-20201106220446319](./docs/images/webapp-streaming-aks.gif)
 
-Delete your cluster 
+**Delete your cluster** 
 
 ```bash
 # delete cluster
@@ -1101,21 +1101,11 @@ az group delete --name $RESOURCE_GROUP --yes --no-wait
 
 
 
+This is it. Feel free to contact me if you need help or just to chat.
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+# This is it !
 
 ![image-20201106220446319](./docs/images/dance-of-joy.gif)
 
