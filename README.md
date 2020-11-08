@@ -48,9 +48,11 @@ This is a purely handson workshop and does not talk about gRPC or protobuf in de
 
   > Create kuberntes configuration for our app and services
 
+- **[Deploy app on Azure Kubernetes Service](#deploy-on-aks)**
+
+  > Create a cluster on Azure Kubernetes Service using Azure CLI and deploy app on cloud.
+
   
-
-
 
 <a name="pre-requisites"></a>
 
@@ -899,7 +901,7 @@ Open http://localhost:3000/ to check our page.
 
 <a name="create-k8s-config"></a>
 
-# Create Kuberntes defintion
+# Step 8 - Create Kubernetes defintion
 
 Before creating our kuberntes configuration, we will push our docker images to docker hub.
 
@@ -1030,13 +1032,72 @@ Deploy our gRPC server in kubernetes cluster
 
 ```bash
 kubectl apply -f Service/k8s/pricing-service.yml
+
+# Check our service in browser
+minkube service stream-web-app-service
 ```
 
+This time our service should be able to get data from gRPC service.
 
 
 
+<a name="deploy-on-aks"></a>
+
+# Step 9 - Deploy app on Azure Kubernetes Service
 
 
+
+Login to Azure CLI and create a Kubernetes cluster
+
+```bash
+# login using azure cli
+az login
+
+RESOURCE_GROUP=pricing-streaming-demo
+CLUSTER_NAME=pricing-streaming-demo
+REGION=westeurope
+
+# Create resource
+az group create --name $RESOURCE_GROUP --location $REGION
+
+# Create cluster on AKS with 1 node
+az aks create --resource-group $RESOURCE_GROUP \
+--name $CLUSTER_NAME \
+--node-count 1 \
+--enable-addons monitoring \
+--generate-ssh-keys
+
+# Allow kubectl to connect and manage our AKS clustuer
+az aks get-credentials \
+--resource-group $RESOURCE_GROUP \
+--name $CLUSTER_NAME
+
+# Check if our node is up and running
+kubectl get nodes
+# NAME                                STATUS   ROLES   AGE     VERSION
+# aks-nodepool1-36600731-vmss000000   Ready    agent   2m58s   v1.17.10
+
+# Deploy our app 
+kubectl apply -f Service/k8s/pricing-service.yml -f StreamWebService/k8s/web.yml
+
+# View the external ip adress of our web app
+kubectl get service/stream-web-app-service
+# NAME                     TYPE           CLUSTER-IP     EXTERNAL-IP     
+# stream-web-app-service   LoadBalancer   10.0.105.141   51.105.150.87   
+```
+
+Opent the external ip of your endpoint in browser. For e.g. for above output it will be http://51.105.150.87 
+
+
+
+![image-20201106220446319](./docs/images/webapp-streaming-aks.gif)
+
+Delete your cluster 
+
+```bash
+# delete cluster
+az group delete --name $RESOURCE_GROUP --yes --no-wait
+```
 
 
 
