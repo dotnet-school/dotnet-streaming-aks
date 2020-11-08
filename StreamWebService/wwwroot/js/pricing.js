@@ -1,9 +1,7 @@
 // wwwroot/js/pricing.js
 "use strict";
 
-const pricingConnection = new signalR.HubConnectionBuilder()
-    .withUrl("/subscribe/infoprice")
-    .build();
+var pricingConnection ;
 
 const showMessage = (content) => {
     var li = document.createElement("li");
@@ -11,20 +9,39 @@ const showMessage = (content) => {
     document.getElementById("messagesList").prepend(li);
 };
 
-const setButtonEnabled = status =>
+const setStreamingEnabled = status =>
     document.getElementById("startStreaming").disabled = !status;
 
-pricingConnection.start().then( ()=> {
-    setButtonEnabled(true);
-    showMessage("Conncted with server");
-}).catch((err) => {
-    showMessage("Failed to connect to server" + err.toString());
-});
+const setStopStreamingEnabled = status =>
+    document.getElementById("cancelStreaming").style.display = status ? "" : "none";
+
+const creatConnection = async () => {
+    pricingConnection = new signalR.HubConnectionBuilder()
+        .withUrl("/subscribe/infoprice")
+        .build();
+    try{
+        await pricingConnection.start();
+        setStreamingEnabled(true);
+        showMessage("Conncted with server");
+    }catch(err){
+        showMessage("Failed to connect to server" + err.toString());
+    }
+}
+
+document
+    .getElementById("cancelStreaming")
+    .addEventListener("click", () => {
+        pricingConnection.connection.stop();
+        setStopStreamingEnabled(false);
+        setStreamingEnabled(true);
+    });
 
 document
     .getElementById("startStreaming")
-    .addEventListener("click", () => {
-        setButtonEnabled(false);
+    .addEventListener("click", async () => {
+        await creatConnection();
+        setStreamingEnabled(false);
+        setStopStreamingEnabled(true);
         const uic = document.getElementById("uic").value;
         const assetType = document.getElementById("assetType").value;
 
@@ -33,9 +50,12 @@ document
                 next: showMessage,
                 complete: () => {
                     showMessage("Stream completed");
-                    setButtonEnabled(true);
+                    setStreamingEnabled(true);
+                    setStopStreamingEnabled(false);
                 },
                 error: showMessage,
             });
         event.preventDefault();
     });
+
+creatConnection();

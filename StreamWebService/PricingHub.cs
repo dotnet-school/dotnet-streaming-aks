@@ -28,7 +28,7 @@ namespace StreamWebService
       
       var streamReader = client.Subscribe(request).ResponseStream;
 
-      yield return "Info: Invoking stream..";
+      yield return "Info: Waiting for data from gRPC server";
 
       while (await streamReader.MoveNext())
       {

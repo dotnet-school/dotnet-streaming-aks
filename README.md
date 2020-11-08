@@ -810,7 +810,7 @@ docker run -p 5000:80 server
 dotnet run --urls=http://localhost:3000/
 ```
 
-
+Open http://localhost:3000/ to check our page.
 
 
 
