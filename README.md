@@ -44,7 +44,11 @@ This is a purely handson workshop and does not talk about gRPC or protobuf in de
 
   > *Run our web streaming service as a docker container*
 
-- 
+- **[Create kubernetes configuration](#create-k8s-config)**
+
+  > Create kuberntes configuration for our app and services
+
+  
 
 
 
@@ -890,6 +894,78 @@ docker run -p 3000:80 -e PRICING_STREAM_ENDPOINT="http://host.docker.internal:50
 ```
 
 Open http://localhost:3000/ to check our page.
+
+
+
+<a name="create-k8s-config"></a>
+
+# Create Kuberntes defintion
+
+Before creating our kuberntes configuration, we will push our docker images to docker hub.
+
+```bash
+docker login
+
+# User your own username instead of nishants
+docker tag server:latest nishants/grpc-pricing-server:v0.1 
+docker push nishants/grpc-pricing-server:v0.1 
+
+# User your own username instead of nishants
+docker tag stream-web-app:latest nishants/stream-web-app:v0.1 
+docker push nishants/stream-web-app:v0.1 
+```
+
+
+
+Open docker hub and make sure your image is publicly accessible:
+
+![image-20201108205911141](docs/images/dockerhub-public-images.png)
+
+
+
+Create a `k8s/web.yml`
+
+```yaml
+# This part creates a load balancer pod that receives traffic from
+# internet and load-balances to our pods
+apiVersion: v1
+kind: Service
+metadata:
+  name: stream-web-app-service
+spec:
+  selector:
+    app: stream-web-app     # This makes load balancer point to stream-web-app deployment
+  ports:
+    - port: 80        
+      targetPort: 80  # The port our container(in pods) listens to
+  type: LoadBalancer
+---
+# This part creates a pod that runs our docker image
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stream-web-app
+spec:
+  # Keep two replicas of our app
+  replicas: 2  
+  selector:
+    matchLabels:
+      app: stream-web-app
+  template:
+    metadata:
+      labels:
+        app: stream-web-app
+    spec:
+      containers:
+        - name: stream-web-app
+          image: nishants/stream-web-app:v0.1  # Our docker image on docker hub
+          ports:
+            - containerPort: 80           # Port that our app listens to
+          env:
+            - name: PRICING_STREAM_ENDPOINT
+              value: http://pricing-grpc-service:5000
+          imagePullPolicy: Always
+```
 
 
 
