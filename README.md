@@ -32,11 +32,13 @@ This is a purely handson workshop and does not talk about gRPC or protobuf in de
 
   > *Consume our streaming endpoint in the client*
   
-- **[Create streaming web app](#create-stream-webapp)**
+- **[Create a streaming web app](#create-stream-webapp)**
 
   > *Create a streaming web app with SIgnalR*
 
+- **[Consume gRPC service in our web app](#add-grpc-client-to-webapp)**
 
+  > *Consume data from gRPC server in the webapp and stream to end client*
 
 
 
@@ -487,8 +489,6 @@ And add this import on top:
 using Grpc.Net.Client;
 ```
 
-
-
 Now lets test our client
 
 ```bash
@@ -705,15 +705,110 @@ document
 
 
 
+<a name="add-grpc-client-to-webapp"></a>
+
+# Step 6 - Add gRPC Client to webapp
+
+This step is almost same as the *[Create gRPC client](#create-client)* step. Instead of a console app, this time we will add gRPC client to a web app.
+
+Add required nugets: 
+
+```bash
+dotnet add package Grpc.Net.Client
+dotnet add package Google.Protobuf
+dotnet add package Grpc.Tools
+```
+
+Add the proto files from our server to this project at `StreamWebService/Protos/prices.proto`
+
+```bash
+mkdir Protos
+cp ../Service/Protos/prices.proto ./Protos/
+```
+
+Add `prices.proto` to out `StreamWebService/StreamWebService.csproj`
+
+```xml
+  <ItemGroup>
+    <Protobuf Include="Protos\prices.proto" GrpcServices="Client" />
+  </ItemGroup>
+```
+
+Update `StreamWebService/Program.cs` : 
+
+```diff
+  public static void Main(string[] args)
+  {
++   AppContext.SetSwitch(
++    "System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", 
++   	true
++   );
+    CreateHostBuilder(args).Build().Run();
+  }
+```
+
+This is required as our gRPC server serves on HTTP port, so lets enable insecure HTTP2 support (gRPC uses HTTP2 under the hood).
 
 
 
+Update `StreamWebService/PricingHub.cs` to stream data from our gRPC service : 
+
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using Grpc.Core;
+using Grpc.Net.Client;
+using Microsoft.AspNetCore.SignalR;
+using Service;
+
+namespace StreamWebService
+{
+  public class PricingHub : Hub
+  {
+    
+    public async IAsyncEnumerable<string> Subscribe(
+            string uic,
+            string assetType,
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken)
+    {
+      var url = "http://localhost:5000";
+      using var channel = GrpcChannel.ForAddress(url);
+      
+      yield return $"Info: Opened channel to : {url}";
+
+      var client = new Pricing.PricingClient(channel);
+      var request = new PriceRequest{Uic = uic, AssetType = assetType};
+      
+      var streamReader = client.Subscribe(request).ResponseStream;
+
+      yield return "Info: Invoking stream..";
+
+      while (await streamReader.MoveNext())
+      {
+        cancellationToken.ThrowIfCancellationRequested();
+        yield return $"Data: {streamReader.Current}";
+      }
+
+      Console.WriteLine("Gracefully ended.");
+    }
+  }
+}
+```
 
 
 
+Now lets consume the gRPC streaming endpoint server in webapp
 
+```bash
+# Run the server on 5000
+docker run -p 5000:80 server
 
-
+# Run on port 300 (in StreamWebService dir)
+dotnet run --urls=http://localhost:3000/
+```
 
 
 
