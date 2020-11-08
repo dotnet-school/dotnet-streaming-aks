@@ -545,19 +545,163 @@ Now open open http://localhost:5000/ and check app
 
 
 
-Now lets add SignalR support to our webapp on server side first
+In `StreamWebService/Startup.cs`, initialize SignalR on server side by adding this to `ConfigureServices`
+
+```diff
+	public void ConfigureServices(IServiceCollection services)
+	{
+		services.AddRazorPages();
++		services.AddSignalR();
+	}
+```
 
 
 
+Create a file `StreamWebService/PricingHub.cs`:
 
+```csharp
+using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.SignalR;
 
+namespace StreamWebService
+{
+  public class PricingHub : Hub
+  {
+    
+    public async IAsyncEnumerable<string> Subscribe(
+            string uic,
+            string assetType,
+            [EnumeratorCancellation]
+            CancellationToken cancellationToken)
+    {
+      for (var i = 0; i < 10; i++)
+      {
+        // Check the cancellation token regularly so that the server will stop
+        // producing items if the client disconnects.
+        cancellationToken.ThrowIfCancellationRequested();
 
+        yield return $"{i} : {uic}-{assetType}";
 
+        // Use the cancellationToken in other APIs that accept cancellation
+        // tokens so the cancellation can flow down to them.
+        await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+      }
+    }
+  }
+}
+```
 
+Not add the PricingHub to endoints in ``StreamWebService/Startup.cs`
 
+```diff
+  app.UseEndpoints(endpoints =>
+  {
+  	endpoints.MapRazorPages();
++  	endpoints.MapHub<PricingHub>("/subscribe/infoprice");
+  });
+```
 
+Add SignalR client side library with libman
 
+```bash
+# Install libman
+dotnet tool install -g Microsoft.Web.LibraryManager.Cli
 
+# Add SignalR client using libman
+libman install @microsoft/signalr@latest -p unpkg -d wwwroot/js/signalr --files dist/browser/signalr.js --files dist/browser/signalr.min.js
+# wwwroot/js/signalr/dist/browser/signalr.js written to disk
+# wwwroot/js/signalr/dist/browser/signalr.min.js written to disk
+# Installed library "@microsoft/signalr@latest" to "wwwroot/js/signalr"
+```
+
+Edit `Pages\Index.cshtml`
+
+```xml
+@page
+<div class="container">
+    <div class="row">
+        <form>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <input type="text" 
+                           id="uic" class="form-control" 
+                           placeholder="uic"/>
+                </div>
+                <div class="form-group col-md-6">
+                    <input class="form-control" 
+                           type="text" 
+                           id="assetType" 
+                           placeholder="Asset Type"/>
+                </div>
+            </div>
+            <button type="button" 
+                    id="startStreaming" 
+                    class="btn btn-primary" 
+                    disabled="true">Start Streaming</button>
+        </form>
+    </div>
+    <hr/>
+    <div class="row">
+        <div class="col-6">
+            <ul id="messagesList" style="list-style: none; padding:  0; margin:  0"></ul>
+        </div>
+    </div>
+</div>
+
+<script src="~/js/signalr/dist/browser/signalr.js"></script>
+<script src="~/js/pricing.js"></script>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+```
+
+Create file `StreamWebService/wwwroot/js/pricing.js`
+
+```javascript
+// wwwroot/js/pricing.js
+"use strict";
+
+const pricingConnection = new signalR.HubConnectionBuilder()
+    .withUrl("/subscribe/infoprice")
+    .build();
+
+const showMessage = (content) => {
+    var li = document.createElement("li");
+    li.textContent = content;
+    document.getElementById("messagesList").prepend(li);
+};
+
+const setButtonEnabled = status => 
+    document.getElementById("startStreaming").disabled = !status;
+
+pricingConnection.start().then( ()=> {
+    setButtonEnabled(true);
+    showMessage("Conncted with server");
+}).catch((err) => {
+    showMessage("Failed to connect to server" + err.toString());
+});
+
+document
+    .getElementById("startStreaming")
+    .addEventListener("click", () => {
+        setButtonEnabled(false);
+        const uic = document.getElementById("uic").value;
+        const assetType = document.getElementById("assetType").value;
+
+        pricingConnection.stream("Subscribe", uic, assetType)
+            .subscribe({
+                next: showMessage,
+                complete: () => {
+                    showMessage("Stream completed");
+                    setButtonEnabled(true);
+                },
+                error: showMessage,
+            });
+        event.preventDefault();
+    });
+```
 
 
 

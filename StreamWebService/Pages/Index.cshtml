@@ -1,10 +1,34 @@
 ﻿@page
-@model IndexModel
-@{
-    ViewData["Title"] = "Home page";
-}
-
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container">
+    <div class="row">
+        <form>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <input type="text" 
+                           id="uic" class="form-control" 
+                           placeholder="uic"/>
+                </div>
+                <div class="form-group col-md-6">
+                    <input class="form-control" 
+                           type="text" 
+                           id="assetType" 
+                           placeholder="Asset Type"/>
+                </div>
+            </div>
+            <button type="button" 
+                    id="startStreaming" 
+                    class="btn btn-primary" 
+                    disabled="true">Start Streaming</button>
+        </form>
+    </div>
+    <hr/>
+    <div class="row">
+        <div class="col-6">
+            <ul id="messagesList" style="list-style: none; padding:  0; margin:  0"></ul>
+        </div>
+    </div>
 </div>
+
+<script src="~/js/signalr/dist/browser/signalr.js"></script>
+<script src="~/js/pricing.js"></script>
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
