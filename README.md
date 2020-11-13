@@ -195,31 +195,9 @@ Just like we can use postman to test an HTTP endpoint, we will use [BloomRPC](ht
 
 Download and open the app from [here](https://appimage.github.io/BloomRPC). 
 
-![image-20201106215735673](./docs/images/open-bloom.png)
+![image-20201106215735673](./docs/images/bloom-first-run.gif)
 
 
-
-Now select the file from our project :  ``dotnet-docker-grpc-stream/Service/Protos/greep.proto`` 
-
-![image-20201106220446319](./docs/images/load-proto-file.png)
-
-
-
-Now enter the address for our gRPC server in address bar as `localhost:5000`
-
-![image-20201106220446319](./docs/images/set-grpc-server-address.png)
-
-
-
-If the server is not running, start it as a container : 
-
-```
-docker run -p 5000:80 server
-```
-
-Now click on the play button to test our endpoint.
-
-![image-20201106220446319](./docs/images/run-first-test.png)
 
 
 
